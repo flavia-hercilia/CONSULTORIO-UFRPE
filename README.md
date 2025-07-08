@@ -1,6 +1,6 @@
 # Sistemas Distribuidos - UFRPE
 ### Projeto:
-## Consultorio Médico
+### Consultorio Médico
 ---
 #### Discentes:  
 
