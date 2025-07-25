@@ -1,4 +1,4 @@
-package Entrada;
+package br.ufrpe.consultorio.modelo;
 
 public class Usuario {
     private String nome;

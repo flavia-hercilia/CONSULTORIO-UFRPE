@@ -1,9 +1,11 @@
-package consulta;
+package br.ufrpe.consultorio.modelo;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
+import br.ufrpe.consultorio.servico.ControladorConsulta;
+//import br.ufrpe.consultorio.modelo.Consultadados;
 
 public class Agenda extends JFrame {
     private JTable tabelaConsultas;

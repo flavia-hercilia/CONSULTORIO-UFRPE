@@ -1,6 +1,11 @@
-package gui;
+package br.ufrpe.consultorio.gui;
 
-import consulta.*;
+import br.ufrpe.consultorio.modelo.Medico;
+import br.ufrpe.consultorio.modelo.Paciente;
+import br.ufrpe.consultorio.modelo.Consultadados;
+import br.ufrpe.consultorio.servico.ControladorMedico;
+import br.ufrpe.consultorio.servico.ControladorPaciente;
+import br.ufrpe.consultorio.servico.ControladorConsulta;
 import java.time.format.DateTimeFormatter;
 import com.toedter.calendar.JDateChooser;
 import javax.swing.*;
@@ -12,6 +17,7 @@ import java.awt.event.ActionListener;
 import java.util.Calendar;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId; 
 import javax.swing.SpinnerDateModel;
 import javax.swing.JSpinner;
 
@@ -75,7 +81,7 @@ public class ProgramaGUI extends JFrame {
             }
         });
 
-        // ActionListener, isso foi criado adicionar pacientes
+        // ActionListener para adicionar pacientes
         btnAddPaciente.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String nome = JOptionPane.showInputDialog(null, "Nome do Paciente:", "Adicionar Paciente", JOptionPane.PLAIN_MESSAGE);
@@ -87,7 +93,7 @@ public class ProgramaGUI extends JFrame {
             }
         });
 
-        // ActionListener, e esse outro para agendar consultas
+        // ActionListener para agendar consultas
         btnAgendarConsulta.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (controladorMedico.getMedicos().isEmpty() || controladorPaciente.getPacientes().isEmpty()) {
@@ -124,9 +130,14 @@ public class ProgramaGUI extends JFrame {
                             JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
                     if (result == JOptionPane.OK_OPTION) {
-                        LocalDate data = LocalDate.of(dateChooser.getDate().getYear() + 1900,
-                                dateChooser.getDate().getMonth() + 1,
-                                dateChooser.getDate().getDate());
+                        java.util.Date selectedDate = dateChooser.getDate(); // Pega a data do JDateChooser
+
+                        if (selectedDate == null) {
+                            JOptionPane.showMessageDialog(null, "Por favor, selecione uma data válida.", "Erro", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        LocalDate data = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
                         if (data.isBefore(LocalDate.now())) {
                             JOptionPane.showMessageDialog(null, "Não é possível agendar consultas em datas passadas.", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -154,7 +165,7 @@ public class ProgramaGUI extends JFrame {
             }
         });
 
-        // ActionListener foi criado para atualizar a agenda
+        // ActionListener para atualizar a agenda
         btnVerAgenda.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 atualizarConsultas();
@@ -243,7 +254,6 @@ public class ProgramaGUI extends JFrame {
                     consulta.getData().format(formatterData),
                     consulta.getHora().format(formatterHora)
             });
-
         }
     }
 }

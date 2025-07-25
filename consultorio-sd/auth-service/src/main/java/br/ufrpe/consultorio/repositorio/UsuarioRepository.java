@@ -1,9 +1,9 @@
-package repository;
+package br.ufrpe.consultorio.repositorio;
 
-import Entrada.Usuario;
+import br.ufrpe.consultorio.modelo.Usuario;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+//import java.util.Optional;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;

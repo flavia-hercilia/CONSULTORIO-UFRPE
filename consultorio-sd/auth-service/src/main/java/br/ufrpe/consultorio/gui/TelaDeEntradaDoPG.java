@@ -1,11 +1,11 @@
-package gui;
+package br.ufrpe.consultorio.gui;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import repository.UsuarioRepository;
+import br.ufrpe.consultorio.repositorio.UsuarioRepository;
 
 public class TelaDeEntradaDoPG extends JFrame {
     private JTextField txtUsuario;

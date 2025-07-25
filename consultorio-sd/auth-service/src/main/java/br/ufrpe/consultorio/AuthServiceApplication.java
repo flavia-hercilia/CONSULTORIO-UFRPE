@@ -1,4 +1,4 @@
-package com.consultoriomedico.authservice;
+package br.ufrpe.consultorio;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

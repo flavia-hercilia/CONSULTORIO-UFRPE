@@ -1,4 +1,4 @@
-package consulta;
+package br.ufrpe.consultorio.modelo;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

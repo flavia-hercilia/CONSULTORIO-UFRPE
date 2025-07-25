@@ -1,7 +1,8 @@
-package consulta;
+package br.ufrpe.consultorio.servico;
 
 import java.util.ArrayList;
 import java.util.List;
+import br.ufrpe.consultorio.modelo.Consultadados;
 
 public class ControladorConsulta {
     private static ControladorConsulta instance;

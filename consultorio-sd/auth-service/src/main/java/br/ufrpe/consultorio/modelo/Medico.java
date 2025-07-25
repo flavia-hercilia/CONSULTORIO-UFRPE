@@ -1,4 +1,4 @@
-package consulta;
+package br.ufrpe.consultorio.modelo;
 
 public class Medico {
 
