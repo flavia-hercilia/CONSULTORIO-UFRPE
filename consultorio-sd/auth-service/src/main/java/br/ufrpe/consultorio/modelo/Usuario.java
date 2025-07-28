@@ -1,5 +1,5 @@
 package br.ufrpe.consultorio.modelo;
-
+//SEM USO POR ENQUANTO
 public class Usuario {
     private String nome;
     private String senha;

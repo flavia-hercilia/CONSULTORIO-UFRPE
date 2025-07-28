@@ -1,16 +1,45 @@
 services:
-  db: # Nome do serviço banco de dados 
-    image: mysql:8.0 # baixado do Docker Hub (versão 8.0)
+  db: #Nome do serviço banco de dados 
+    image: mysql:8.0 #baixado do Docker Hub (versão 8.0)
     container_name: consultorio-mysql 
     environment: 
       MYSQL_ROOT_PASSWORD: root_password 
-      MYSQL_DATABASE: consultorio_db # nome do banco de dados que será criado
-      MYSQL_USER: user_app 
-      MYSQL_PASSWORD: app_password
-    ports: # mapeamento de portas
-      - "3306:3306" # porta padrão do MySQL
-    volumes: # persistência de dados
-      - mysql_data:/var/lib/mysql # mapeia um volume Docker para a pasta de dados do MySQL dentro do contêiner
+      MYSQL_DATABASE: consultorio_db #nome do banco de dados que será criado
+    ports: #mapeamento de portas
+      - "3306:3306" #porta padrão do MySQL
+    volumes: #persistência de dados
+      - mysql_data:/var/lib/mysql #mapeia um volume Docker para a pasta de dados do MySQL dentro do contêiner
 
-volumes: # definição dos volumes usados 
-  mysql_data: # volume 'mysql_data' que definimos acima
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      start_period: 10s
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service-app
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/consultorio_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password
+    depends_on:
+      db:
+        condition: service_healthy #espera pelo healthcheck do DB
+
+  professional-service:
+    build: ./professional-service
+    container_name: professional-service-app
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/consultorio_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password
+    depends_on:
+      db:
+        condition: service_healthy #espera pelo healthcheck do DB
+
+volumes: #definição dos volumes usados 
+  mysql_data:

@@ -1,5 +1,5 @@
 package br.ufrpe.consultorio.repositorio;
-
+//SEM USO POR ENQUANTO
 import br.ufrpe.consultorio.modelo.Usuario;
 import java.util.ArrayList;
 import java.util.List;

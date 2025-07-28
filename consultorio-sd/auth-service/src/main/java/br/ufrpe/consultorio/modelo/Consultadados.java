@@ -1,5 +1,5 @@
 package br.ufrpe.consultorio.modelo;
-
+//SEM USO POR ENQUANTO
 import java.time.LocalDate;
 import java.time.LocalTime;
 

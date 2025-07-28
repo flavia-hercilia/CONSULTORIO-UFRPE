@@ -1,5 +1,5 @@
 package br.ufrpe.consultorio.servico;
-
+//SEM USO POR ENQUANTO
 import java.util.ArrayList;
 import java.util.List;
 import br.ufrpe.consultorio.modelo.Paciente;
