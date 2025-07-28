@@ -1,5 +1,5 @@
 package br.ufrpe.consultorio.gui;
-
+//SEM USO POR ENQUANTO
 import br.ufrpe.consultorio.modelo.Medico;
 import br.ufrpe.consultorio.modelo.Paciente;
 import br.ufrpe.consultorio.modelo.Consultadados;

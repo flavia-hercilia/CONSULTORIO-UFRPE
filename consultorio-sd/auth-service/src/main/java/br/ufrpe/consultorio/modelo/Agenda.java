@@ -1,5 +1,5 @@
 package br.ufrpe.consultorio.modelo;
-
+//SEM USO POR ENQUANTO
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
