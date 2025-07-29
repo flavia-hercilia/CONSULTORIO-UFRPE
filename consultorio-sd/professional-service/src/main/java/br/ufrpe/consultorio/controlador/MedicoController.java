@@ -13,6 +13,7 @@ import java.util.Optional;
 @RestController 
 @RequestMapping("/api/medicos") //define a URL base para todos os endpoints neste controlador
 @RequiredArgsConstructor 
+@CrossOrigin(origins = "http://localhost:3000") //permite requisições do frontend
 public class MedicoController {
 
     private final MedicoService medicoService; 

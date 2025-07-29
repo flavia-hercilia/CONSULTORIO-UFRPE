@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>br.ufrpe.consultorio</groupId>
-	<artifactId>patient-service</artifactId>
+	<artifactId>agendamento</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>patient-service</name>
-	<description>Serviço de gerenciamento de pacientes</description>
+	<name>agendamento</name>
+	<description>Serviço de agendamento e consultas</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -58,6 +58,10 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -84,7 +88,7 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
-					<mainClass>br.ufrpe.consultorio.PatientServiceApplication</mainClass>
+					<mainClass>br.ufrpe.consultorio.AgendamentoApplication</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>

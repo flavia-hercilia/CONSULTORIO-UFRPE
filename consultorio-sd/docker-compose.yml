@@ -41,5 +41,32 @@ services:
       db:
         condition: service_healthy #espera pelo healthcheck do DB
 
+  patient-service:
+    build: ./patient-service
+    container_name: patient-service-app
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/consultorio_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password
+    depends_on:
+      db:
+        condition: service_healthy #espera pelo healthcheck do DB
+    
+
+  agendamento:
+    build: ./agendamento
+    container_name: agendamento-app
+    ports:
+      - "8084:8084" 
+    environment: 
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/consultorio_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password
+    depends_on: #espera pelo healthcheck do DB
+      db:
+        condition: service_healthy
+
 volumes: #definição dos volumes usados 
   mysql_data:
