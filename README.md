@@ -21,5 +21,5 @@
 - Java
 - Python
 ### Front end
-- 
+- JavaScript e React
 -----
