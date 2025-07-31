@@ -45,7 +45,16 @@ public class PacienteController {
         return paciente.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
+    
+    // GET /api/pacientes/nome/{nome}
+    @GetMapping("/nome/{nome}")
+    public ResponseEntity<List<Paciente>> buscarPorNome(@PathVariable String nome) {
+        List<Paciente> pacientes = pacienteService.buscarPorNome(nome);
+        if (pacientes.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(pacientes);
+    }
     // GET /api/pacientes
     @GetMapping
     public ResponseEntity<List<Paciente>> listarTodosPacientes() {

@@ -32,6 +32,10 @@ public class PacienteService {
         return pacienteRepositorio.findByCpf(cpf);
     }
 
+    public List<Paciente> buscarPorNome(String nome) {
+        return pacienteRepositorio.findByNomeContainingIgnoreCase(nome);
+    }
+
     public List<Paciente> listarTodosPacientes() {
         return pacienteRepositorio.findAll();
     }

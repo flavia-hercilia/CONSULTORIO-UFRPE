@@ -2,7 +2,11 @@ package br.ufrpe.consultorio.controlador;
 
 import br.ufrpe.consultorio.entidade.Consulta;
 import br.ufrpe.consultorio.servico.ConsultaService;
+import jakarta.validation.Valid;
 import br.ufrpe.consultorio.dto.MedicoDTO;
+import br.ufrpe.consultorio.dto.PacienteDTO;
+import br.ufrpe.consultorio.dto.ConsultaRequestDTO;
+import br.ufrpe.consultorio.dto.ConsultaResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,19 +23,6 @@ import java.util.List;
 public class ConsultaController {
 
     private final ConsultaService consultaService;
-
-    //endpoint para agendar uma nova consulta (POST)
-    @PostMapping
-    public ResponseEntity<?> agendarConsulta(@RequestBody Consulta consulta) {
-        try {
-            Consulta novaConsulta = consultaService.agendarConsulta(consulta);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novaConsulta);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao agendar consulta: " + e.getMessage());
-        }
-    }
 
     //endpoint para buscar uma consulta por ID (GET)
     @GetMapping("/{id}")
@@ -69,10 +60,33 @@ public class ConsultaController {
         }
     }
 
-    //endpoint para listar todas as consultas (GET)
+    // NOVO: Endpoint para buscar paciente por ID (chamando o patient-service)
+    @GetMapping("/pacientes/{pacienteId}")
+    public ResponseEntity<?> buscarPacientePorId(@PathVariable Long pacienteId) {
+        try {
+            PacienteDTO paciente = consultaService.buscarPacientePorId(pacienteId);
+            return ResponseEntity.ok(paciente);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Paciente não encontrado com ID: " + pacienteId);
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> agendarConsulta(@Valid @RequestBody ConsultaRequestDTO request) {
+        try {
+            Consulta novaConsulta = consultaService.agendarConsultaComDetalhes(request); 
+            return ResponseEntity.status(HttpStatus.CREATED).body(novaConsulta);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao agendar consulta: " + e.getMessage());
+        }
+    }
+
+    //endpoint para listar todas as consultas com os nomes de médico e paciente
     @GetMapping
-    public ResponseEntity<List<Consulta>> listarTodasAsConsultas() {
-        List<Consulta> consultas = consultaService.listarTodasAsConsultas();
+    public ResponseEntity<List<ConsultaResponseDTO>> listarTodasAsConsultas() {
+        List<ConsultaResponseDTO> consultas = consultaService.listarTodasAsConsultasComNomes();
         return ResponseEntity.ok(consultas);
     }
 
@@ -125,6 +139,31 @@ public class ConsultaController {
             return ResponseEntity.badRequest().body("Formato de data/hora inválido. Use YYYY-MM-DDTHH:MM:SS.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao buscar consultas: " + e.getMessage());
+        }
+    }
+
+    //endpoint para listar todos os médicos (chamando o professional-service)
+    @GetMapping("/medicos")
+    public ResponseEntity<?> listarTodosMedicos() {
+        try {
+            List<MedicoDTO> medicos = consultaService.listarTodosMedicos(); 
+            if (medicos.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nenhum médico encontrado.");
+            }
+            return ResponseEntity.ok(medicos);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao buscar todos os médicos: " + e.getMessage());
+        }
+    }
+
+    //endpoint para listar todos os pacientes (chamando o patient-service)
+    @GetMapping("/pacientes")
+    public ResponseEntity<List<PacienteDTO>> listarTodosPacientes() {
+        try {
+            List<PacienteDTO> pacientes = consultaService.listarTodosPacientes();
+            return ResponseEntity.ok(pacientes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
