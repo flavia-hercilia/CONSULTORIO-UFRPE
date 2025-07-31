@@ -68,5 +68,16 @@ services:
       db:
         condition: service_healthy
 
+  frontend: # Nome do serviço no Docker Compose
+    build: ./frontend-consultorio 
+    container_name: frontend-app
+    ports:
+      - "3000:80" #mapeia a porta 3000 para a porta 80 do Nginx no contêiner
+    depends_on: #backends rodando antes do frontend tentar acessá-los
+      - auth-service
+      - professional-service
+      - patient-service
+      - agendamento
+
 volumes: #definição dos volumes usados 
   mysql_data:
