@@ -14,6 +14,10 @@ import reactor.core.publisher.Mono;
 import java.util.stream.Collectors;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +29,31 @@ public class ConsultaService {
     private final ConsultaRepositorio consultaRepositorio;
     private final WebClient professionalServiceWebClient;
     private final WebClient patientServiceWebClient;
+    private static final String RABBITMQ_HOST = "rabbitmq";
+    private static final String NOTIFICATIONS_QUEUE = "notifications_queue";
+
+    //publica a mensagem no RabbitMQ (fila de mensagens))
+    private void publishNotification(Consulta consulta) {
+        try {
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost(RABBITMQ_HOST);
+            try (Connection connection = factory.newConnection();
+                 Channel channel = connection.createChannel()) {
+                
+                channel.queueDeclare(NOTIFICATIONS_QUEUE, false, false, false, null);
+                
+                String message = String.format(
+                    "{\"pacienteId\": %d, \"medicoId\": %d, \"dataHora\": \"%s\", \"tipoConsulta\": \"%s\"}",
+                    consulta.getPacienteId(), consulta.getMedicoId(), consulta.getDataHora().toString(), consulta.getTipoConsulta()
+                );
+                
+                channel.basicPublish("", NOTIFICATIONS_QUEUE, null, message.getBytes());
+                System.out.println(" [x] Sent '" + message + "'");
+            }
+        } catch (Exception e) {
+            System.err.println(" [!] Erro ao publicar mensagem na fila: " + e.getMessage());
+        }
+    }
 
     //agendar uma consulta a partir de um DTO com nomes/especialidade
     @Transactional
@@ -52,49 +81,52 @@ public class ConsultaService {
     }
 
     @Transactional //garante que a operação seja atômica (ou tudo acontece, ou nada acontece)
-    public Consulta agendarConsulta(Consulta consulta) {
-        //antes de agendar:
-        //verifica se a data e hora da consulta não estão no passado
-        if (consulta.getDataHora().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Não é possível agendar consultas no passado.");
-        }
-
-        //verifica se já existe uma consulta para o médico no mesmo horário
-        Optional<Consulta> consultaExistente = consultaRepositorio.findByMedicoIdAndDataHora(
-                consulta.getMedicoId(), consulta.getDataHora());
-
-        if (consultaExistente.isPresent()) {
-            throw new IllegalArgumentException("O médico já possui uma consulta agendada para este horário.");
-        }
-
-        try {
-            professionalServiceWebClient.get()
-                    .uri("/api/medicos/{id}", consulta.getMedicoId())
-                    .retrieve()
-                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                            clientResponse -> Mono.error(new RuntimeException("Erro ao verificar médico: " + clientResponse.statusCode())))
-                    .bodyToMono(MedicoDTO.class)
-                    .block(); 
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Médico com ID " + consulta.getMedicoId() + " não encontrado ou serviço de profissional indisponível.");
-        }
-
-        try {
-             patientServiceWebClient.get()
-                     .uri("/api/pacientes/{id}", consulta.getPacienteId())
-                     .retrieve()
-                     .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                             clientResponse -> Mono.error(new RuntimeException("Erro ao verificar paciente: " + clientResponse.statusCode())))
-                     .bodyToMono(PacienteDTO.class)
-                     .block();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Paciente com ID " + consulta.getPacienteId() + " não encontrado ou serviço de paciente indisponível.");
-        }
-
-        // Salva a consulta no banco de dados
-        consulta.setStatus("AGENDADA"); 
-        return consultaRepositorio.save(consulta);
+public Consulta agendarConsulta(Consulta consulta) {
+    //antes de agendar:
+    //verifica se a data e hora da consulta não estão no passado
+    if (consulta.getDataHora().isBefore(LocalDateTime.now())) {
+        throw new IllegalArgumentException("Não é possível agendar consultas no passado.");
     }
+
+    //verifica se já existe uma consulta para o médico no mesmo horário
+    Optional<Consulta> consultaExistente = consultaRepositorio.findByMedicoIdAndDataHora(
+            consulta.getMedicoId(), consulta.getDataHora());
+
+    if (consultaExistente.isPresent()) {
+        throw new IllegalArgumentException("O médico já possui uma consulta agendada para este horário.");
+    }
+
+    try {
+        professionalServiceWebClient.get()
+                .uri("/api/medicos/{id}", consulta.getMedicoId())
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> Mono.error(new RuntimeException("Erro ao verificar médico: " + clientResponse.statusCode())))
+                .bodyToMono(MedicoDTO.class)
+                .block(); 
+    } catch (Exception e) {
+        throw new IllegalArgumentException("Médico com ID " + consulta.getMedicoId() + " não encontrado ou serviço de profissional indisponível.");
+    }
+
+    try {
+         patientServiceWebClient.get()
+                 .uri("/api/pacientes/{id}", consulta.getPacienteId())
+                 .retrieve()
+                 .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                         clientResponse -> Mono.error(new RuntimeException("Erro ao verificar paciente: " + clientResponse.statusCode())))
+                 .bodyToMono(PacienteDTO.class)
+                 .block();
+    } catch (Exception e) {
+        throw new IllegalArgumentException("Paciente com ID " + consulta.getPacienteId() + " não encontrado ou serviço de paciente indisponível.");
+    }
+
+    // Salva a consulta no banco de dados
+    consulta.setStatus("AGENDADA"); 
+    Consulta savedConsulta = consultaRepositorio.save(consulta); 
+    publishNotification(savedConsulta); 
+
+    return savedConsulta;
+}
 
     public Optional<Consulta> buscarConsultaPorId(Long id) {
         return consultaRepositorio.findById(id);
@@ -161,17 +193,14 @@ public class ConsultaService {
                 .block();
     }
 
-// NOVO: Método que lista todas as consultas e resolve os nomes de médico/paciente
     public List<ConsultaResponseDTO> listarTodasAsConsultasComNomes() {
-        // 1. Busca todas as consultas do banco de dados local
+
         List<Consulta> consultas = consultaRepositorio.findAll();
 
-        // 2. Converte cada Consulta em um ConsultaResponseDTO
         return consultas.stream().map(consulta -> {
             String nomeMedico = "Médico não encontrado";
             String nomePaciente = "Paciente não encontrado";
 
-            // Busca o nome do médico
             try {
                 MedicoDTO medico = professionalServiceWebClient.get()
                         .uri("/api/medicos/{id}", consulta.getMedicoId())
@@ -182,10 +211,8 @@ public class ConsultaService {
                     nomeMedico = medico.getNome();
                 }
             } catch (WebClientResponseException.NotFound ex) {
-                // Deixa o nome como "Médico não encontrado"
             }
 
-            // Busca o nome do paciente
             try {
                 PacienteDTO paciente = patientServiceWebClient.get()
                         .uri("/api/pacientes/{id}", consulta.getPacienteId())
@@ -196,10 +223,8 @@ public class ConsultaService {
                     nomePaciente = paciente.getNome();
                 }
             } catch (WebClientResponseException.NotFound ex) {
-                // Deixa o nome como "Paciente não encontrado"
             }
 
-            // Cria e retorna o DTO de resposta
             return new ConsultaResponseDTO(
                     consulta.getId(),
                     consulta.getMedicoId(),
