@@ -1,25 +1,53 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/login', { username, password });
-      alert('Login bem-sucedido');
+      const res = await axios.post('http://localhost:8081/api/auth/login', { username, password });
+
+      if (res.status === 200) {
+        const userToken = 'token_do_admin'; 
+        const userData = { username, role: 'ADMIN' }; 
+
+        login(userData, userToken); 
+        navigate('/'); 
+      }
+
     } catch (error) {
-      alert('Falha no login');
+      console.error('Erro de login:', error);
+      alert('Credenciais inválidas. Tente novamente.');
     }
   };
 
   return (
-    <form onSubmit={handleLogin}>
-      <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Usuário" />
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Senha" />
-      <button type="submit">Entrar</button>
-    </form>
+    <div>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Nome de usuário"
+          required
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Senha"
+          required
+        />
+        <button type="submit">Entrar</button>
+      </form>
+    </div>
   );
 }
